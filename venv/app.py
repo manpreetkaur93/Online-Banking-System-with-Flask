@@ -221,8 +221,10 @@ from sqlalchemy import or_
 @app.route("/search", methods=["GET"])
 def search():
     search_query = request.args.get("search_query", "")  # Default to empty string if not found
+    sort_order = request.args.get("sort_order", "asc")  # Default to ascending if not found
     page = request.args.get('page', 1, type=int)
     per_page = 10
+
     if search_query:
         search_filter = (
             Customer.personnummer.like(f"%{search_query}%") |
@@ -233,9 +235,12 @@ def search():
     else:
         search_filter = (Customer.id > 0)  # Show all if no search query
 
-    results = Customer.query.filter(search_filter).paginate(page=page, per_page=per_page, error_out=False)
+    if sort_order == "asc":
+        results = Customer.query.filter(search_filter).order_by(Customer.namn.asc()).paginate(page=page, per_page=per_page, error_out=False)
+    else:
+        results = Customer.query.filter(search_filter).order_by(Customer.namn.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
-    return render_template("search_results.html", search_results=results, search_query=search_query)
+    return render_template("search_results.html", search_results=results, search_query=search_query, sort_order=sort_order)
 
 
 @app.route("/customer/<int:customer_id>")

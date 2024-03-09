@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<form action="{{ url_for('search') }}" method="get">
+    <input type="hidden" name="search_query" value="{{ search_query }}">
+    <select name="sort_order" onchange="this.form.submit()">
+        <option value="asc" {{ 'selected' if sort_order == 'asc' else '' }}>Ascending</option>
+        <option value="desc" {{ 'selected' if sort_order == 'desc' else '' }}>Descending</option>
+    </select>
+</form>
 <div class="search-area my-4">
     <form class="search-form d-flex" action="{{ url_for('search') }}" method="GET">
         <input type="text" name="search_query" class="form-control me-2" placeholder="Search customers..." value="{{ search_query }}">
