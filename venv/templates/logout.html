@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">You've been logged out!</h4>
+        <p>You have successfully logged out of your account.</p>
+        <hr>
+        <p class="mb-0">Click <a href="{{ url_for('login') }}" class="alert-link">here</a> to login again.</p>
+    </div>
+</div>
+{% endblock %}

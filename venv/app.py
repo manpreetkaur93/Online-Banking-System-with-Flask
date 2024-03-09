@@ -388,6 +388,13 @@ def transfer():
 
     return render_template("transfer.html")
 
+@app.route('/logout')
+def logout():
+    # Remove user from session
+    session.pop('user_id', None)
+    flash("You have been logged out successfully.", "info")
+    return redirect(url_for('login'))
+
 if __name__ == "__main__":
     with app.app_context():
          db.create_all()  # This should work as it's within the application context.
