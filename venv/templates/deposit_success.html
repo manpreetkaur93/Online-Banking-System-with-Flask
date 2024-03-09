@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="transaction-confirmation">
+    <h2>Deposit Confirmation</h2>
+    <div class="alert alert-success" role="alert">
+        <p>A deposit of <b>{{ deposit_amount }} SEK</b> into the account <em>{{ account.account_number }}</em> belonging to <strong>{{ account.customer.name }}</strong> has been successfully completed!</p>
+        <p>Transaction Date: {{ deposit_transaction.timestamp }}</p>
+        <p>The new balance is {{ '%.2f'|format(account_balance) }} SEK.</p>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="confirmation-box" style="margin: 2rem auto; max-width: 600px; background-color: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="color: #4CAF50;">Withdrawal Approved</h2>
+    <p>A withdrawal of <strong>{{ withdrawal_amount }} SEK</strong> from the account <em>{{ account.account_number }}</em> belonging to <strong>{{ account.customer.name }}</strong> has been successfully processed.</p>
+    <p>Transaction Date: <em>{{ withdrawal_transaction.timestamp }}</em></p>
+    <p>The new balance is <strong>{{ '%.2f'|format(account_balance) }} SEK</strong>.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="transfer-confirmation">
+    <h2>Transfer Approved</h2>
+    <p>Transfer of <b>{{ transfer_amount }}</b> SEK from account <b>{{ from_account.account_number }}</b> belonging to <b>{{ from_account.customer.name }}</b> to account <b>{{ to_account.account_number }}</b> belonging to <b>{{ to_account.customer.name }}</b> has been successfully processed.</p>
+    <p>Transaction Date: {{ from_transfer_transaction.timestamp }}</p>
+    <p>The new balance for {{ from_account.account_number }} is {{ '%.2f'|format(from_account_balance) }} SEK.</p>
+</section>
+{% endblock %}

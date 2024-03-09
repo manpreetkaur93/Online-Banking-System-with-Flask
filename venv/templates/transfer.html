@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="transfer-form">
+    <h2>Account to Account Transfer</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="from_account_number">From Account Number:</label>
+            <input type="text" id="from_account_number" name="from_account_number" required>
+        </div>
+
+        <div class="form-group">
+            <label for="to_account_number">To Account Number:</label>
+            <input type="text" id="to_account_number" name="to_account_number" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="transfer_amount">Amount (SEK):</label>
+            <input type="number" id="transfer_amount" name="transfer_amount" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Transfer</button>
+    </form>
+    {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+    {% endif %}
+</section>
+{% endblock %}

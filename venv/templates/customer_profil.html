@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="customer-info">
+    <h2>Customer Profile: {{ customer.name }}</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Customer ID</th>
+                    <th scope="col">Social Security Number</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Total Balance (SEK)</th>
+                    <th scope="col">Linked Accounts</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ customer.id }}</td>
+                    <td>{{ customer.social_security_number }}</td>
+                    <td>{{ customer.address }}</td>
+                    <td>{{ customer.total_balance|number_format(2, '.', ',') }} SEK</td>
+                    <td>
+                        {% for account in customer.accounts %}
+                            <a href="{{ url_for('view_account_transactions', account_id=account.id) }}">
+                                {{ account.account_number }}
+                            </a>
+                            {% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

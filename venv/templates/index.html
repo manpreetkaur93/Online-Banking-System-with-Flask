@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="bank-summary py-5">
+    <h2 class="text-center mb-4">Bank Overview</h2>
+    
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-md-4 mb-3">
+                <div class="summary-item p-4 border rounded">
+                    <h5>Total Customers</h5>
+                    <p class="fs-4">{{ total_customers }}</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="summary-item p-4 border rounded">
+                    <h5>Total Accounts</h5>
+                    <p class="fs-4">{{ total_accounts }}</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="summary-item p-4 border rounded">
+                    <h5>Current Balance (SEK)</h5>
+                    <p class="fs-4">{{ '%.2f'|format(total_balance) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
