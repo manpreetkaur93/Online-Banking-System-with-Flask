@@ -196,6 +196,15 @@ def login():
             return render_template("login.html", error_message=error_message)
     return render_template("login.html")
 
+@app.route("/home")
+def home():
+    total_customers = Customer.query.count()
+    total_accounts = Account.query.count()
+    total_balance = db.session.query(func.round(func.sum(Transaction.amount), 2)).scalar() or 0
+
+    return render_template('index.html', total_customers=total_customers, total_accounts=total_accounts, total_balance=total_balance)
+
+
 @app.route("/customers", strict_slashes=False)
 def customers():
     page = request.args.get('page', 1, type=int)
