@@ -8,21 +8,24 @@
                 <div class="card shadow">
                     <div class="card-body">
                         <h2 class="card-title text-center">Withdrawal</h2>
-                        <form action="{{ url_for('handle_withdrawal') }}" method="POST" class="mt-3">
+                        <form action="{{ url_for('withdrawal') }}" method="POST" class="mt-3">
+                            {{ form.hidden_tag() }}
+                            <!--Include this if you're using Flask-WTF to handle CSRF protection -->
                             <div class="mb-3">
-                                <label for="account_number" class="form-label">Account Number:</label>
-                                <input type="text" class="form-control" id="account_number" name="account_number" placeholder="Enter account number" required>
+                                {{ form.account_number.label(class_="form-label") }}
+                                {{ form.account_number(class_="form-control") }}
                             </div>
                             <div class="mb-3">
-                                <label for="withdrawal_amount" class="form-label">Amount (SEK):</label>
-                                <input type="number" class="form-control" id="withdrawal_amount" name="withdrawal_amount" placeholder="Enter amount" required>
+                                {{ form.withdrawal_amount.label(class_="form-label") }}
+                                {{ form.withdrawal_amount(class_="form-control") }}
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Withdraw</button>
                             </div>
                         </form>
+                        <!-- Handle error_message if needed -->
                         {% if error_message %}
-                            <div class="alert alert-danger mt-3">{{ error_message }}</div>
+                        <div class="alert alert-danger mt-3">{{ error_message }}</div>
                         {% endif %}
                     </div>
                 </div>

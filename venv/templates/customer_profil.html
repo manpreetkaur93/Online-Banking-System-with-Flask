@@ -19,7 +19,7 @@
                     <td>{{ customer.id }}</td>
                     <td>{{ customer.social_security_number }}</td>
                     <td>{{ customer.address }}</td>
-                    <td>{{ customer.total_balance|number_format(2, '.', ',') }} SEK</td>
+                    <td>{{ "{:,.2f}".format(customer.total_balance) }} SEK</td>
                     <td>
                         {% for account in customer.accounts %}
                             <a href="{{ url_for('view_account_transactions', account_id=account.id) }}">

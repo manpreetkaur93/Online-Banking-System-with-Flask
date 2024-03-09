@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, flash, render_template, request, jsonify, redirect, url_for, session
 from flask_login import UserMixin
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy,pagination
@@ -12,6 +12,9 @@ from datetime import datetime
 from sqlalchemy import asc
 from sqlalchemy.orm import joinedload
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf import FlaskForm
+from wtforms import StringField, DecimalField
+from wtforms.validators import DataRequired
 
 db = SQLAlchemy()
 migrate = None
@@ -208,44 +211,31 @@ from sqlalchemy import or_
 
 @app.route("/search", methods=["GET"])
 def search():
-    search_query = request.args.get("search_query")
+    search_query = request.args.get("search_query", "")  # Default to empty string if not found
     page = request.args.get('page', 1, type=int)
-    per_page = 7 
+    per_page = 10
+    if search_query:
+        search_filter = (
+            Customer.personnummer.like(f"%{search_query}%") |
+            Customer.city.like(f"%{search_query}%") |
+            Customer.namn.like(f"%{search_query}%") |
+            Customer.address.like(f"%{search_query}%")
+        )
+    else:
+        search_filter = (Customer.id > 0)  # Show all if no search query
 
-    try:
-        if search_query is not None:
-            search_query_int = int(search_query)
-        else:
-            search_query_int = None
-    except ValueError:
-        search_query_int = None
+    results = Customer.query.filter(search_filter).paginate(page=page, per_page=per_page, error_out=False)
 
-    search_filter = (
-        (Customer.id == search_query_int) |
-        (Customer.personnummer.like(f"%{search_query}%")) |
-        (Customer.city.like(f"%{search_query}%")) |
-        (Customer.namn.like(f"%{search_query}%")) |
-        (Customer.address.like(f"%{search_query}%"))
-    )
+    return render_template("search_results.html", search_results=results, search_query=search_query)
 
-    query = Customer.query.filter(search_filter)
-
-    results = query.paginate(page=page, per_page=per_page, error_out=False)
-    for customer in results.items:
-        total_balance = 0
-        for account in customer.accounts:
-            total_balance += account.calculate_balance()
-        customer.total_balance = total_balance
-
-    return render_template("search_results.html", results=results, search_query=search_query)
 
 @app.route("/customer/<int:customer_id>")
-def customer_profile(customer_id):
+def view_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     return render_template("customer_profil.html", customer=customer)
 
-@app.route('/accounttransactions/<account_id>', methods=['GET'])
-def accounttransactions(account_id):
+@app.route('/view_account_transactions/<account_id>', methods=['GET'])
+def view_account_transactions(account_id):
     account = Account.query.get(account_id)
     if account:
         total_balance = account.calculate_balance()
@@ -294,44 +284,52 @@ def deposit():
         return render_template("deposit_success.html", account=account, deposit_amount=deposit_amount, deposit_transaction=deposit_transaction, account_balance=account_balance)
 
     return render_template("deposit.html")
+class WithdrawalForm(FlaskForm):
+    account_number = StringField('Account Number', validators=[DataRequired()])
+    withdrawal_amount = DecimalField('Amount (SEK)', validators=[DataRequired()])
 
 @app.route("/withdrawal", methods=["GET", "POST"])
 def withdrawal():
-    if request.method == "POST":
-        account_number = request.form.get("account_number")
-        withdrawal_amount = float(request.form.get("withdrawal_amount"))
+    form = WithdrawalForm()
+    if form.validate_on_submit():
+        account_number = form.account_number.data
+        withdrawal_amount = float(form.withdrawal_amount.data)  # Convert to float here
 
         account = Account.query.filter_by(account_number=account_number).first()
 
         if not account:
-            error_message = "Kontot hittades inte. Vänligen försök igen"
-            return render_template("uttag.html", error_message=error_message)
+            flash("Account not found. Please try again!", 'danger')
+            return render_template("withdraw.html", form=form)
 
-        if withdrawal_amount <= 0:
-            error_message = "Ogiltigt belopp. Försök igen"
-            return render_template("uttag.html", error_message=error_message)
-
-        #räknar RIKTIGA saldo
         current_balance = sum(transaction.amount for transaction in account.transactions)
-
-        if withdrawal_amount > current_balance:
-            error_message = "Det finns inte tillräckligt pengar på kontot."
-            return render_template("uttag.html", error_message=error_message)
+        if withdrawal_amount <= 0 or withdrawal_amount > current_balance:
+            flash("Invalid amount or insufficient funds. Please try again!", 'danger')
+            return render_template("withdraw.html", form=form)
 
         withdrawal_transaction = Transaction(
-            amount=-withdrawal_amount,  #GLÖM ej att ha minus värde
-            transaction_type='Uttag',
+            amount=-withdrawal_amount,
+            transaction_type='Withdraw',
             timestamp=datetime.now(),
             account=account
         )
         db.session.add(withdrawal_transaction)
         db.session.commit()
 
-        new_balance = current_balance - withdrawal_amount
+        # Store withdrawal details in session for success page
+        session['withdrawal_details'] = {
+            'amount': withdrawal_amount,
+            'timestamp': withdrawal_transaction.timestamp.strftime('%Y-%m-%d %H:%M'),
+            'new_balance': current_balance - withdrawal_amount
+        }
 
-        return render_template("uttag_success.html", account=account, withdrawal_amount=withdrawal_amount, withdrawal_transaction=withdrawal_transaction, account_balance=new_balance)
+        return redirect(url_for('withdraw_success', account_id=account.id))
+    return render_template("withdraw.html", form=form)
 
-    return render_template("uttag.html")
+@app.route('/withdraw_success/<int:account_id>')
+def withdraw_success(account_id):
+    account = Account.query.get_or_404(account_id)
+    withdrawal_details = session.get('withdrawal_details', {})
+    return render_template('withdraw_success.html', account=account, withdrawal_details=withdrawal_details)
 
 @app.route("/transfer", methods=["GET", "POST"])
 def transfer():
