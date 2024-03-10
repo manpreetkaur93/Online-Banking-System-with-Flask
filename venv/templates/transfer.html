@@ -3,6 +3,14 @@
 {% block content %}
 <section class="transfer-form">
     <h2>Account to Account Transfer</h2>
+    <!-- Display flashed messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <form method="POST">
         <div class="form-group">
             <label for="from_account_number">From Account Number:</label>
@@ -21,8 +29,6 @@
 
         <button type="submit" class="btn-submit">Transfer</button>
     </form>
-    {% if error_message %}
-        <p class="error">{{ error_message }}</p>
-    {% endif %}
+    <!-- The error_message variable part can be removed if using flash messages for errors -->
 </section>
 {% endblock %}

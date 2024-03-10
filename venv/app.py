@@ -269,35 +269,34 @@ def view_account_transactions(account_id):
 def deposit():
     if request.method == "POST":
         account_number = request.form.get("account_number")
-        deposit_amount = float(request.form.get("deposit_amount"))
+        deposit_amount = request.form.get("deposit_amount", type=float)
 
+        # Check for a valid account number and positive deposit amount
         account = Account.query.filter_by(account_number=account_number).first()
-
         if not account:
             error_message = "Account not found. Please enter a valid account number."
             return render_template("deposit.html", error_message=error_message)
 
-        if deposit_amount <= 0:
+        if deposit_amount is None or deposit_amount <= 0:
             error_message = "Invalid deposit amount. Please enter a positive number."
             return render_template("deposit.html", error_message=error_message)
 
-        #räkna saldo efter VARJE transaction
-        account_balance = sum(transaction.amount for transaction in account.transactions)
-
-        account_balance += deposit_amount
-
+        # Process the deposit
+        account_balance = sum(transaction.amount for transaction in account.transactions) + deposit_amount
         deposit_transaction = Transaction(
             amount=deposit_amount,
-            transaction_type='Insättning',
+            transaction_type='Deposit',
             timestamp=datetime.now(),
             account=account
         )
         db.session.add(deposit_transaction)
         db.session.commit()
 
-        return render_template("deposit_success.html", account=account, deposit_amount=deposit_amount, deposit_transaction=deposit_transaction, account_balance=account_balance)
+        return render_template("deposit_success.html", account=account, deposit_amount=deposit_amount, account_balance=account_balance)
 
     return render_template("deposit.html")
+
+
 class WithdrawalForm(FlaskForm):
     account_number = StringField('Account Number', validators=[DataRequired()])
     withdrawal_amount = DecimalField('Amount (SEK)', validators=[DataRequired()])
@@ -355,30 +354,38 @@ def transfer():
         from_account = Account.query.filter_by(account_number=from_account_number).first()
         to_account = Account.query.filter_by(account_number=to_account_number).first()
 
+        # Check if both accounts exist
         if not from_account or not to_account:
-            error_message = "Ett av kontona hittades inte. Vänligen försök igen"
-            return render_template("transfer.html", error_message=error_message)
-
+            flash("One of the accounts is not found. Please try again!", "danger")
+            return redirect(url_for('transfer'))
+        
+        # Validate transfer amount
         if transfer_amount <= 0:
-            error_message = "Ogiltigt överföringsbelopp. Vänligen försök igen"
-            return render_template("transfer.html", error_message=error_message)
+            flash("Invalid transfer amount. Please enter a positive number.", "danger")
+            return redirect(url_for('transfer'))
 
-        from_account_balance = sum(transaction.amount for transaction in from_account.transactions)
+        # Ensure from_account has transactions before summing
+        if from_account.transactions:
+            from_account_balance = sum(transaction.amount for transaction in from_account.transactions)
+        else:
+            from_account_balance = 0.0
 
+        # Check if the sending account has enough funds
         if transfer_amount > from_account_balance:
-            error_message = "Det finns inte tillräckligt pengar på avsändarkontot."
-            return render_template("transfer.html", error_message=error_message)
+            flash("Not enough funds in the sender's account. Please try a lower amount!", "danger")
+            return redirect(url_for('transfer'))
 
+        # Create and add the transactions
         from_transfer_transaction = Transaction(
-            amount=-transfer_amount,  # Negativs värde
-            transaction_type='Överföring',
+            amount=-transfer_amount,
+            transaction_type='Transfer Out',
             timestamp=datetime.now(),
             account=from_account
         )
 
         to_transfer_transaction = Transaction(
-            amount=transfer_amount, 
-            transaction_type='Överföring',
+            amount=transfer_amount,
+            transaction_type='Transfer In',
             timestamp=datetime.now(),
             account=to_account
         )
@@ -386,7 +393,6 @@ def transfer():
         db.session.add(from_transfer_transaction)
         db.session.add(to_transfer_transaction)
         db.session.commit()
-
         new_from_account_balance = from_account_balance - transfer_amount
 
         return render_template("transfer_success.html", from_account=from_account, to_account=to_account, transfer_amount=transfer_amount, from_transfer_transaction=from_transfer_transaction, to_transfer_transaction=to_transfer_transaction, from_account_balance=new_from_account_balance)
