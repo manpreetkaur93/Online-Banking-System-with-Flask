@@ -292,7 +292,12 @@ def deposit():
         db.session.add(deposit_transaction)
         db.session.commit()
 
-        return render_template("deposit_success.html", account=account, deposit_amount=deposit_amount, account_balance=account_balance)
+        return render_template("deposit_success.html", 
+                       account=account, 
+                       deposit_amount=deposit_amount, 
+                       deposit_transaction=deposit_transaction, 
+                       account_balance=account_balance)
+
 
     return render_template("deposit.html")
 
