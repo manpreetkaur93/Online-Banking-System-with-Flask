@@ -1,5 +1,5 @@
 from flask import Flask, flash, render_template, request, jsonify, redirect, url_for, session
-from flask_login import UserMixin
+from flask_login import LoginManager, UserMixin, login_required
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy,pagination
 from sqlalchemy import or_,func
@@ -197,6 +197,7 @@ def login():
     return render_template("login.html")
 
 @app.route("/home")
+#@login_required
 def home():
     total_customers = Customer.query.count()
     total_accounts = Account.query.count()
@@ -206,6 +207,7 @@ def home():
 
 
 @app.route("/customers", strict_slashes=False)
+#@login_required
 def customers():
     page = request.args.get('page', 1, type=int)
     per_page = 10
@@ -219,6 +221,7 @@ def template():
 from sqlalchemy import or_
 
 @app.route("/search", methods=["GET"])
+#@login_required
 def search():
     search_query = request.args.get("search_query", "")  # Default to empty string if not found
     sort_order = request.args.get("sort_order", "asc")  # Default to ascending if not found
@@ -244,11 +247,13 @@ def search():
 
 
 @app.route("/customer/<int:customer_id>")
+#@login_required
 def view_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     return render_template("customer_profil.html", customer=customer)
 
 @app.route('/view_account_transactions/<account_id>', methods=['GET'])
+#@login_required
 def view_account_transactions(account_id):
     account = Account.query.get(account_id)
     if account:
@@ -266,6 +271,7 @@ def view_account_transactions(account_id):
     return redirect(url_for('search'))
 
 @app.route("/deposit", methods=["GET", "POST"])
+#@login_required
 def deposit():
     if request.method == "POST":
         account_number = request.form.get("account_number")
@@ -307,6 +313,7 @@ class WithdrawalForm(FlaskForm):
     withdrawal_amount = DecimalField('Amount (SEK)', validators=[DataRequired()])
 
 @app.route("/withdrawal", methods=["GET", "POST"])
+#@login_required
 def withdrawal():
     form = WithdrawalForm()
     if form.validate_on_submit():
@@ -344,12 +351,14 @@ def withdrawal():
     return render_template("withdraw.html", form=form)
 
 @app.route('/withdraw_success/<int:account_id>')
+#@login_required
 def withdraw_success(account_id):
     account = Account.query.get_or_404(account_id)
     withdrawal_details = session.get('withdrawal_details', {})
     return render_template('withdraw_success.html', account=account, withdrawal_details=withdrawal_details)
 
 @app.route("/transfer", methods=["GET", "POST"])
+#@login_required
 def transfer():
     if request.method == "POST":
         from_account_number = request.form.get("from_account_number")
