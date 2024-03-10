@@ -318,7 +318,7 @@ def withdrawal():
     form = WithdrawalForm()
     if form.validate_on_submit():
         account_number = form.account_number.data
-        withdrawal_amount = float(form.withdrawal_amount.data)  # Convert to float here
+        withdrawal_amount = float(form.withdrawal_amount.data)  
 
         account = Account.query.filter_by(account_number=account_number).first()
 
@@ -422,6 +422,6 @@ def logout():
 
 if __name__ == "__main__":
     with app.app_context():
-         db.create_all()  # This should work as it's within the application context.
-         seed_data(500)  # Seed data should also work correctly now.
+         db.create_all() 
+         seed_data(500) 
     app.run(debug=True)
