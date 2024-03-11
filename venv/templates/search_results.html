@@ -27,7 +27,7 @@
                     <th>Email</th>
                     <th>Address</th>
                     <th>City</th>
-                    <th>Balance (SEK)</th>
+                    <!-- <th>Balance (SEK)</th> -->
                     <th>Profile</th>
                 </tr>
             </thead>
@@ -39,7 +39,7 @@
                     <td>{{ customer.email }}</td>
                     <td>{{ customer.address }}</td>
                     <td>{{ customer.city }}</td>
-                    <td>{{ '%.2f'|format(customer.total_balance) }}</td>
+                    <!-- <td>{{ '%.2f'|format(customer.total_balance) }}</td> -->
                     <td><a href="{{ url_for('view_customer', customer_id=customer.id) }}">View Profile</a></td>
                 </tr>
                 {% endfor %}
