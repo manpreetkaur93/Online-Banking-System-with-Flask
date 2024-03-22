@@ -239,12 +239,32 @@ def search():
         search_filter = (Customer.id > 0)  # Show all if no search query
 
     if sort_order == "asc":
-        results = Customer.query.filter(search_filter).order_by(Customer.namn.asc()).paginate(page=page, per_page=per_page, error_out=False)
+        results = Customer.query.filter(search_filter).order_by(Customer.namn.asc()).paginate(page=page, per_page=per_page, error_out=False) 
     else:
         results = Customer.query.filter(search_filter).order_by(Customer.namn.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template("search_results.html", search_results=results, search_query=search_query, sort_order=sort_order)
 
+@app.route("/todo", methods=['GET', 'POST'], strict_slashes=False)
+#@login_required
+def todo():
+    if request.method == 'GET':
+        customer_id = request.args.get('customer_id')
+        if customer_id:
+            customer = Customer.query.filter_by(id=int(customer_id)).first()
+            if customer:
+                # Redirect to customer_profile.html with the customer's details
+                return render_template("customer_profil.html", customer=customer)
+            else:
+                # If no customer is found, reload todo.html with an error message
+                error_message = "Customer not found. Please try again."
+                return render_template("todo.html", error=error_message)
+        else:
+            # Initial page load without search, just render the search form
+            return render_template("todo.html")
+    else:
+        # For other methods, though technically not used due to 'methods=['GET', 'POST']'
+        return "Method not allowed", 405
 
 @app.route("/customer/<int:customer_id>")
 #@login_required
