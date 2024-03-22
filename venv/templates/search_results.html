@@ -3,10 +3,10 @@
 {% block content %}
 <form action="{{ url_for('search') }}" method="get">
     <input type="hidden" name="search_query" value="{{ search_query }}">
-    <select name="sort_order" onchange="this.form.submit()">
+    <!-- <select name="sort_order" onchange="this.form.submit()">
         <option value="asc" {{ 'selected' if sort_order == 'asc' else '' }}>Ascending</option>
         <option value="desc" {{ 'selected' if sort_order == 'desc' else '' }}>Descending</option>
-    </select>
+    </select> -->
 </form>
 <div class="search-area my-4">
     <form class="search-form d-flex" action="{{ url_for('search') }}" method="GET">
@@ -22,15 +22,15 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Address</th>
-                    <th>City</th>
-                    <!-- <th>Balance (SEK)</th> -->
+                    <th><a href="{{ url_for('search', search_query=search_query, sort_column='id', sort_order='asc' if sort_column != 'id' or sort_order == 'desc' else 'desc') }}">ID</a></th>
+                    <th><a href="{{ url_for('search', search_query=search_query, sort_column='namn', sort_order='asc' if sort_column != 'namn' or sort_order == 'desc' else 'desc') }}">Name</a></th>
+                    <th><a href="{{ url_for('search', search_query=search_query, sort_column='email', sort_order='asc' if sort_column != 'email' or sort_order == 'desc' else 'desc') }}">Email</a></th>
+                    <th><a href="{{ url_for('search', search_query=search_query, sort_column='address', sort_order='asc' if sort_column != 'address' or sort_order == 'desc' else 'desc') }}">Address</a></th>
+                    <th><a href="{{ url_for('search', search_query=search_query, sort_column='city', sort_order='asc' if sort_column != 'city' or sort_order == 'desc' else 'desc') }}">City</a></th>
                     <th>Profile</th>
                 </tr>
             </thead>
+            
             <tbody>
                 {% for customer in search_results.items %}
                 <tr>

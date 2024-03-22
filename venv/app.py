@@ -1,5 +1,5 @@
 from flask import Flask, flash, render_template, request, jsonify, redirect, url_for, session
-from flask_login import LoginManager, UserMixin, login_required
+from flask_login import LoginManager, UserMixin, login_required, user_accessed
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy,pagination
 from sqlalchemy import or_,func
@@ -33,9 +33,10 @@ app.config["SESSION_TYPE"] = "filesystem"
 db.init_app(app)
 Session(app)
 migrate = Migrate(app, db)
-# login_manager = LoginManager(app)
-# login_manager.login_view = 'login'
-# Bootstrap(app)
+# login_manager = LoginManager()
+# login_manager.init_app(app)
+# login_manager.login_view = "login"
+
 class Customer(db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True)
@@ -181,6 +182,9 @@ def index():
 
     return render_template('index.html', total_customers=total_customers, total_accounts=total_accounts, total_balance=total_balance)
 
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return User.query.get(int(user_id))
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -221,10 +225,10 @@ def template():
 from sqlalchemy import or_
 
 @app.route("/search", methods=["GET"])
-#@login_required
 def search():
-    search_query = request.args.get("search_query", "")  # Default to empty string if not found
-    sort_order = request.args.get("sort_order", "asc")  # Default to ascending if not found
+    search_query = request.args.get("search_query", "")
+    sort_order = request.args.get("sort_order", "asc")
+    sort_column = request.args.get("sort_column", "namn") 
     page = request.args.get('page', 1, type=int)
     per_page = 10
 
@@ -236,14 +240,22 @@ def search():
             Customer.address.like(f"%{search_query}%")
         )
     else:
-        search_filter = (Customer.id > 0)  # Show all if no search query
+        search_filter = (Customer.id > 0)
+
+    order_by_column = {
+        'id': Customer.id,
+        'namn': Customer.namn,
+        'email': Customer.email,
+        'address': Customer.address,
+        'city': Customer.city
+    }.get(sort_column, Customer.namn) 
 
     if sort_order == "asc":
-        results = Customer.query.filter(search_filter).order_by(Customer.namn.asc()).paginate(page=page, per_page=per_page, error_out=False) 
+        results = Customer.query.filter(search_filter).order_by(order_by_column.asc()).paginate(page=page, per_page=per_page, error_out=False)
     else:
-        results = Customer.query.filter(search_filter).order_by(Customer.namn.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        results = Customer.query.filter(search_filter).order_by(order_by_column.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
-    return render_template("search_results.html", search_results=results, search_query=search_query, sort_order=sort_order)
+    return render_template("search_results.html", search_results=results, search_query=search_query, sort_order=sort_order, sort_column=sort_column)
 
 @app.route("/todo", methods=['GET', 'POST'], strict_slashes=False)
 #@login_required
@@ -253,18 +265,12 @@ def todo():
         if customer_id:
             customer = Customer.query.filter_by(id=int(customer_id)).first()
             if customer:
-                # Redirect to customer_profile.html with the customer's details
                 return render_template("customer_profil.html", customer=customer)
             else:
-                # If no customer is found, reload todo.html with an error message
                 error_message = "Customer not found. Please try again."
                 return render_template("todo.html", error=error_message)
         else:
-            # Initial page load without search, just render the search form
             return render_template("todo.html")
-    else:
-        # For other methods, though technically not used due to 'methods=['GET', 'POST']'
-        return "Method not allowed", 405
 
 @app.route("/customer/<int:customer_id>")
 #@login_required
